@@ -11,7 +11,7 @@ terraform {
     }
   }
   backend "gcs" {
-    bucket = "tfstate-community-rewards"
+    bucket  = "tfstate-ma-nasa"
     prefix = "terraform/state"
   }
 }
