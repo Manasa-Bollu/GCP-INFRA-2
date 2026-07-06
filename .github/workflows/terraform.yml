@@ -56,3 +56,4 @@ jobs:
           cd terraform/environments/qa
           terraform init
           terraform apply -input=false tfplan
+          
