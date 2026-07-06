@@ -1,0 +1,54 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+
+env:
+  DEV_PROJECT_ID: 'project-dev-replace-me'
+  REGION: 'us-central1'
+  IMAGE_NAME: 'frontend-service'
+  DEV_WIF_PROVIDER: 'projects/123456789/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+  DEV_SERVICE_ACCOUNT: 'github-actions-sa@project-dev-replace-me.iam.gserviceaccount.com'
+
+jobs:
+  build-and-deploy-dev:
+    name: Build & Deploy to DEV
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (DEV)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.DEV_WIF_PROVIDER }}
+          service_account: ${{ env.DEV_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker Auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker Image
+        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.DEV_PROJECT_ID }}/frontend-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} ./frontend
+
+      - name: Push Docker Image
+        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.DEV_PROJECT_ID }}/frontend-repo/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run (DEV)
+        run: |
+          gcloud run deploy dev-frontend-service \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.DEV_PROJECT_ID }}/frontend-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --project ${{ env.DEV_PROJECT_ID }} \
+            --quiet

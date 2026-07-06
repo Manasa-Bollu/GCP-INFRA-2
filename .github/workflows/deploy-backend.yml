@@ -1,0 +1,73 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+
+env:
+  DEV_PROJECT_ID: 'project-dev-replace-me'
+  QA_PROJECT_ID: 'project-qa-replace-me'
+  REGION: 'us-central1'
+  IMAGE_NAME: 'backend-service'
+  DEV_WIF_PROVIDER: 'projects/123456789/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+  DEV_SERVICE_ACCOUNT: 'github-actions-sa@project-dev-replace-me.iam.gserviceaccount.com'
+
+jobs:
+  build-and-deploy-dev:
+    name: Build & Deploy to DEV
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (DEV)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.DEV_WIF_PROVIDER }}
+          service_account: ${{ env.DEV_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker Auth
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build Docker Image
+        run: docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.DEV_PROJECT_ID }}/backend-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} ./backend
+
+      - name: Push Docker Image
+        run: docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.DEV_PROJECT_ID }}/backend-repo/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run (DEV)
+        run: |
+          gcloud run deploy dev-backend-service \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.DEV_PROJECT_ID }}/backend-repo/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --project ${{ env.DEV_PROJECT_ID }} \
+            --quiet
+  
+  deploy-qa:
+    name: Deploy to QA
+    runs-on: ubuntu-latest
+    needs: build-and-deploy-dev
+    environment: qa # Requires manual approval setup in GitHub Environments
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      # Similar authentication and deployment steps for QA would go here, 
+      # using QA_PROJECT_ID and QA WIF Provider.
+      - name: Placeholder for QA Deploy
+        run: echo "Deploy to QA after manual approval"
