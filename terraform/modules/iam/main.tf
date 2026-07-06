@@ -46,8 +46,12 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
 }
 
 resource "google_service_account_iam_member" "github_wif_sa_bind" {
-  count              = var.setup_github_wif ? 1 : 0
+  for_each = var.setup_github_wif ? toset([
+    "roles/iam.workloadIdentityUser",
+    "roles/iam.serviceAccountTokenCreator"
+  ]) : []
+
   service_account_id = var.github_sa_id
-  role               = "roles/iam.workloadIdentityUser"
+  role               = each.value
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool[0].name}/attribute.repository/${var.github_repository}"
 }
