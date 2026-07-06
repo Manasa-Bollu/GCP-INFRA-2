@@ -11,7 +11,7 @@ terraform {
     }
   }
   backend "gcs" {
-    bucket = "qa-terraform-state-bucket-replace-me"
+    bucket = "tfstate-community-rewards"
     prefix = "terraform/state"
   }
 }

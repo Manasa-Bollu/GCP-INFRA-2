@@ -2,6 +2,7 @@ variable "project_id" {
 
   type        = string
   description = "The GCP Project ID for the DEV environment"
+  default     = "project-b1008fb7-e9d3-4eb5-81f"
 
 }
 

@@ -1,0 +1,60 @@
+name: Terraform
+
+on:
+  push:
+    branches:
+      - main
+      - project-b1008fb7-e9d3-4eb5-81f
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_VAR_region: ${{ vars.REGION }}
+  TF_VAR_project_id: ${{ github.ref_name }}
+  TF_VAR_secret_value: ${{ vars.SECRET_VALUE }}
+  GCP_WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
+  GCP_SERVICE_ACCOUNT: ${{ vars.SERVICE_ACCOUNT }}
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init & Plan
+        run: |
+          cd "$TF_VAR_project_id"
+          terraform init
+          terraform plan -out=tfplan -input=false
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: ${{ github.ref_name }}/tfplan
+
+      - name: Terraform Apply
+        run: |
+          cd "$TF_VAR_project_id"
+          terraform init
+          terraform apply -input=false tfplan
