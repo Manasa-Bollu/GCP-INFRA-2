@@ -1,9 +1,7 @@
 variable "project_id" {
-
   type        = string
   description = "The GCP Project ID for the QA environment"
   default     = "project-b1008fb7-e9d3-4eb5-81f"
-
 }
 
 variable "region" {
@@ -23,9 +21,7 @@ variable "domain" {
 }
 
 variable "github_repository" {
-
   type        = string
   description = "The GitHub repository in the format owner/repo for Workload Identity Federation"
   default     = "Manasa-Bollu/GCP-INFRA-2"
-
 }
