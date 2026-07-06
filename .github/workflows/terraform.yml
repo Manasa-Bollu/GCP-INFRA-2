@@ -14,7 +14,7 @@ permissions:
 env:
   DEV_PROJECT_ID: 'project-b1008fb7-e9d3-4eb5-81f'
   REGION: 'us-central1'
-  DEV_WIF_PROVIDER: 'projects/717066773680/locations/global/workloadIdentityPools/testing/providers/work'
+  DEV_WIF_PROVIDER: 'projects/717066773680/locations/global/workloadIdentityPools/testing/providers/test2'
   DEV_SERVICE_ACCOUNT: 'github-wif@project-b1008fb7-e9d3-4eb5-81f.iam.gserviceaccount.com'
 
 jobs:
