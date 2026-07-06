@@ -2,7 +2,7 @@ resource "google_vpc_access_connector" "connector" {
   name          = var.connector_name
   project       = var.project_id
   region        = var.region
-  network       = var.network_name
+
   machine_type  = "e2-micro"
   min_instances = 2
   max_instances = 3
