@@ -55,4 +55,4 @@ jobs:
         run: |
           cd terraform/environments/qa
           terraform init
-          terraform destroy -input=false tfplan
+          terraform destroy -auto-approve tfplan
